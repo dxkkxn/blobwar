@@ -26,6 +26,6 @@ impl Strategy for Greedy {
                 best_move = Some(movement);
             }
         }
-        return best_move;
+        best_move
     }
 }
