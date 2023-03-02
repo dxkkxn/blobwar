@@ -7,9 +7,29 @@ use std::fmt;
 /// Min-Max algorithm with a given recursion depth.
 pub struct MinMax(pub u8);
 
+fn min_max(depth: u8, state: &Configuration) -> (i8, Option<Movement>) {
+    if depth == 0 || state.game_over() {
+        return (state.value(), None);
+    }
+    let mut best_score = -state.value();
+    let mut best_move: Option<Movement> = None;
+    for movement in state.movements() {
+        let next_conf : Configuration = state.play(&movement);
+        let (mut score, _) = min_max(depth - 1, &next_conf);
+        score = -score;
+        if score > best_score {
+            best_score = score;
+            best_move = Some(movement);
+        }
+    }
+    (best_score, best_move)
+}
+
+
 impl Strategy for MinMax {
     fn compute_next_move(&mut self, state: &Configuration) -> Option<Movement> {
-        unimplemented!("TODO: implementer min max")
+        let (_, mv) = min_max(self.0, state);
+        mv
     }
 }
 
