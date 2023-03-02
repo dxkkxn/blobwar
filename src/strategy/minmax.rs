@@ -11,18 +11,17 @@ fn min_max(depth: u8, state: &Configuration) -> (i8, Option<Movement>) {
     if depth == 0 || state.game_over() {
         return (state.value(), None);
     }
-    let mut best_score = -state.value();
+    let mut best_score = i8::MIN;
     let mut best_move: Option<Movement> = None;
     for movement in state.movements() {
         let next_conf : Configuration = state.play(&movement);
-        let (mut score, _) = min_max(depth - 1, &next_conf);
-        score = -score;
+        let (score, _) = min_max(depth - 1, &next_conf);
         if score > best_score {
             best_score = score;
             best_move = Some(movement);
         }
     }
-    (best_score, best_move)
+    (-best_score, best_move)
 }
 
 
