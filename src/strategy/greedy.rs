@@ -16,7 +16,7 @@ impl fmt::Display for Greedy {
 
 impl Strategy for Greedy {
     fn compute_next_move(&mut self, state: &Configuration) -> Option<Movement> {
-        let mut best_score = -state.value();
+        let mut best_score = i8::MIN;
         let mut best_move: Option<Movement> = None;
         for movement in state.movements() {
             let next_conf : Configuration = state.play(&movement);
