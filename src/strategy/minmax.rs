@@ -21,7 +21,6 @@ fn min_max(depth: u8, state: &Configuration) -> (i8, Option<Movement>) {
             best_move = Some(movement);
         }
     }
-    println!("{best_score}");
     if best_score == -128 {
         best_score = state.value();
         best_move = None;
