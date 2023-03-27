@@ -163,6 +163,11 @@ impl<'a> Configuration<'a> {
                 .is_all()
     }
 
+    /// Return if the current player can do any movements
+    pub fn can_move(&self) -> bool {
+        self.movements().count() != 0
+    }
+
     /// Iterate on all possible jumps for given player.
     fn jumps<'b>(&'b self) -> impl 'b + Iterator<Item = Movement> {
         self.blobs[self.current_player as usize]

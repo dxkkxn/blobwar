@@ -7,24 +7,25 @@ use std::fmt;
 /// Min-Max algorithm with a given recursion depth.
 pub struct MinMax(pub u8);
 
+// Given the evaluation function state.value this algo is more a negMax
+// than min_max, the eval fuction negates its self at every recursive call
+// so we calculate the max and we return the negation of the result to the
+// parent node
 fn min_max(depth: u8, state: &Configuration) -> (i8, Option<Movement>) {
-    if depth == 0 || state.game_over() {
+    if depth == 0 || !state.can_move() {
         return (state.value(), None);
     }
     let mut best_score = i8::MIN;
     let mut best_move: Option<Movement> = None;
     for movement in state.movements() {
-        let next_conf : Configuration = state.play(&movement);
+        let next_conf: Configuration = state.play(&movement);
         let (score, _) = min_max(depth - 1, &next_conf);
         if score > best_score {
             best_score = score;
             best_move = Some(movement);
         }
     }
-    if best_score == -128 {
-        best_score = state.value();
-        best_move = None;
-    }
+    assert_ne!(best_score, i8::MIN); // maybe get rid of this for performance
     (-best_score, best_move)
 }
 
