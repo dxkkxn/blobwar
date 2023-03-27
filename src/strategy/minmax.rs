@@ -30,9 +30,22 @@ fn min_max(depth: u8, state: &Configuration) -> (i8, Option<Movement>) {
 }
 
 
+// neg_max but in functional programming
+fn neg_max(depth: u8, state: &Configuration) -> (i8, Option<Movement>) {
+    if depth == 0 || !state.can_move() {
+        return (state.value(), None);
+    }
+    let (bmove, (score, _)) = state
+        .movements()
+        .map(|movement| (movement, neg_max(depth - 1, &(state.play(&movement)))))
+        .max_by_key(|&(m, (value, _))| value)
+        .unwrap();
+    (-score, Some(bmove))
+}
+
 impl Strategy for MinMax {
     fn compute_next_move(&mut self, state: &Configuration) -> Option<Movement> {
-        let (_, mv) = min_max(self.0, state);
+        let (_, mv) = neg_max(self.0, state);
         mv
     }
 }
