@@ -32,6 +32,31 @@ fn min_max(depth: u8, state: &Configuration) -> (i8, Option<Movement>) {
 }
 
 
+fn min_max_with_avg(depth: u8, state: &Configuration) -> (i8, f32, Option<Movement>) {
+    if depth == 0 || !state.can_move() {
+        return (state.value(), state.value().into(), None);
+    }
+    let mut best_score = i8::MIN;
+    let mut best_avg = f32::MIN;
+    let mut best_move: Option<Movement> = None;
+    let mut count: i16 = 0;
+    let mut sum: i16 = 0;
+    for movement in state.movements() {
+        let next_conf: Configuration = state.play(&movement);
+        let (score, avg, _) = min_max_with_avg(depth - 1, &next_conf);
+        if score > best_score || (score == best_score && avg > best_avg ) {
+            best_score = score;
+            best_avg = avg;
+            best_move = Some(movement);
+        }
+        count += 1;
+        sum += score as i16;
+    }
+    assert_ne!(best_score, i8::MIN); // maybe get rid of this for performance
+    (-best_score, (-sum/count).into(), best_move)
+}
+
+
 // neg_max but in functional programming
 fn neg_max(depth: u8, state: &Configuration) -> (i8, Option<Movement>) {
     if depth == 0 || !state.can_move() {
