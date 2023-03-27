@@ -3,6 +3,8 @@ use super::Strategy;
 use crate::configuration::{Configuration, Movement};
 use crate::shmem::AtomicMove;
 use std::fmt;
+use std::time::Instant;
+use rayon::prelude::*;
 
 /// Min-Max algorithm with a given recursion depth.
 pub struct MinMax(pub u8);
@@ -43,9 +45,27 @@ fn neg_max(depth: u8, state: &Configuration) -> (i8, Option<Movement>) {
     (-score, Some(bmove))
 }
 
+
+// parallel neg_max
+fn pneg_max(depth: u8, state: &Configuration) -> (i8, Option<Movement>) {
+    if depth == 0 || !state.can_move() {
+        return (state.value(), None);
+    }
+    let (bmove, (score, _)) = state
+        .movements()
+        .par_bridge()
+        .map(|movement| (movement, pneg_max(depth - 1, &(state.play(&movement)))))
+        .max_by_key(|&(m, (value, _))| value)
+        .unwrap();
+    (-score, Some(bmove))
+}
+
 impl Strategy for MinMax {
     fn compute_next_move(&mut self, state: &Configuration) -> Option<Movement> {
-        let (_, mv) = neg_max(self.0, state);
+        let start_time = Instant::now();
+        let (_, mv) = pneg_max(self.0, state);
+        let end_time = Instant::now();
+        println!("Time elapsed: {:?}", end_time.duration_since(start_time));
         mv
     }
 }
