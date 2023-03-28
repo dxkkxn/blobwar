@@ -51,6 +51,35 @@ fn alpha_beta(depth: u8, state: &Configuration, mut alpha: i8, beta: i8) -> (i8,
     (-best_score, best_move)
 }
 
+// Alpha - Beta algorithm in functional programming
+fn alpha_beta_func(depth: u8, state: &Configuration, mut alpha: i8, beta: i8) -> (i8, Option<Movement>) {
+    if depth == 0 || !state.can_move() {
+        return (state.value(), None);
+    }
+    let result = state
+        .movements()
+        .try_fold((i8::MIN, None), |acc, movement| {
+            let (mut bscore, mut bmove) = acc;
+            let (score, _) = alpha_beta_func(depth - 1, &(state.play(&movement)), -beta, -alpha);
+            if score > bscore {
+                bscore = score;
+                bmove = Some(movement);
+                if bscore > alpha {
+                    alpha = bscore;
+                }
+                if beta < alpha {
+                    return Err((bscore, bmove));
+                }
+            }
+            Ok((bscore, bmove))
+        });
+    let (bscore, bmove) = match result {
+        Ok((bscore, bmove)) => (bscore, bmove),
+        Err((bscore, bmove)) => (bscore, bmove),
+    };
+    (-bscore, bmove)
+}
+
 fn alpha_beta_sorted(depth: u8, state: &Configuration, mut alpha: i8, beta: i8) -> (i8, Option<Movement>) {
     if depth == 0 || !state.can_move() {
         return (state.value(), None);
