@@ -32,7 +32,7 @@ fn min_max(depth: u8, state: &Configuration) -> (i8, Option<Movement>) {
 }
 
 
-fn min_max_with_avg(depth: u8, state: &Configuration) -> (i8, f32, Option<Movement>) {
+fn min_max_with_avg(depth: u8, state: &Configuration, with_avg: bool) -> (i8, f32, Option<Movement>) {
     if depth == 0 || !state.can_move() {
         return (state.value(), state.value().into(), None);
     }
@@ -43,8 +43,8 @@ fn min_max_with_avg(depth: u8, state: &Configuration) -> (i8, f32, Option<Moveme
     let mut sum: i16 = 0;
     for movement in state.movements() {
         let next_conf: Configuration = state.play(&movement);
-        let (score, avg, _) = min_max_with_avg(depth - 1, &next_conf);
-        if score > best_score || (score == best_score && avg > best_avg ) {
+        let (score, avg, _) = min_max_with_avg(depth - 1, &next_conf, !with_avg);
+        if score > best_score || (with_avg && score == best_score && avg > best_avg) {
             best_score = score;
             best_avg = avg;
             best_move = Some(movement);
@@ -78,20 +78,111 @@ fn pneg_max(depth: u8, state: &Configuration) -> (i8, Option<Movement>) {
     }
     let (bmove, (score, _)) = state
         .movements()
-        .par_bridge()
+        // .par_bridge()
+        .collect::<Vec<_>>()
+        .into_par_iter()
         .map(|movement| (movement, pneg_max(depth - 1, &(state.play(&movement)))))
-        .max_by_key(|&(m, (value, _))| value)
+        .max_by_key(|&(_, (value, _))| value)
         .unwrap();
     (-score, Some(bmove))
 }
 
+//expectimax in functional programming, hard make parallel
+fn pexpectimax(depth: u8, state: &Configuration, with_avg: bool) -> (i8, f32, Option<Movement>) {
+    if depth == 0 || !state.can_move() {
+        return (state.value(), state.value().into(), None);
+    }
+
+    let (bmove, score, _bavg, sum, count) = state
+        .movements()
+        .map(|movement| (movement, pexpectimax(depth - 1, &(state.play(&movement)), !with_avg)))
+        .fold((None, i8::MIN, f32::MIN, 0i16, 0i16), |acc, (mov,(score, avg, _))| {
+            let (mut bmove, mut max, mut bavg, sum, count) = acc;
+            if score > max || (with_avg && score == max && avg > bavg) {
+                max = score;
+                bmove = Some(mov);
+                bavg = avg;
+            }
+            (bmove, max, bavg, sum+score as i16, count+1)
+        });
+    (-score, (-sum/count).into(), bmove)
+}
+
+// static mut min_maxs: Duration = Duration::from_secs(0);
+// static mut min_max_with_avgs: Duration = Duration::from_secs(0);
+// static mut neg_maxs: Duration = Duration::from_secs(0);
+// static mut pneg_maxs: Duration = Duration::from_secs(0);
+// static mut count1: u32 = 0;
+
+// static mut gvec: Vec<f32> = Vec::new();
+
 impl Strategy for MinMax {
-    fn compute_next_move(&mut self, state: &Configuration) -> Option<Movement> {
-        let start_time = Instant::now();
-        let (_, mv) = pneg_max(self.0, state);
-        let end_time = Instant::now();
-        println!("Time elapsed: {:?}", end_time.duration_since(start_time));
-        mv
+    fn compute_next_move(
+        &mut self,
+        state: &Configuration,
+        _memo: Option<&mut HashMap<String, (i8, Movement)>>,
+    ) -> Option<Movement> {
+        // let start_time = Instant::now();
+        // let (s0, mv0) = min_max(self.0, state);
+        // let end_time = Instant::now();
+        // unsafe {
+        //     count1 += 1;
+        //     min_maxs += end_time.duration_since(start_time);
+        //     println!("avg min_max {:?}", min_maxs/count1);
+        // }
+
+        // let start_time = Instant::now();
+        // let (s1, _, mv1) = pexpectimax(self.0, state, true);
+        // let end_time = Instant::now();
+        // let duration = end_time.duration_since(start_time);
+        // // if duration.as_secs_f32() > 1.0 {
+        // //     unreachable!("Duration was greater than 1 second");
+        // // }
+        // println!("time: {duration:?}");
+        // mv1
+
+        // let start_time = Instant::now();
+        // let (s2, mv2) = neg_max(self.0, state);
+        // let end_time = Instant::now();
+        // unsafe {
+        //     neg_maxs += end_time.duration_since(start_time);
+        //     println!("avg neg_max {:?}", neg_maxs/count1);
+        // }
+
+        // let start_time = Instant::now();
+        // let (s2, mv3) = pneg_max(self.0, state);
+        // let end_time = Instant::now();
+        // unsafe {
+        //     pneg_maxs += end_time.duration_since(start_time);
+        //     println!("avg normal func {:?}", pneg_maxs/count1);
+        // }
+        // println!("equality {}", mv0 == mv1);
+        // println!("equality {}", mv1 == mv2);
+        // println!("equality {}", mv2 == mv3);
+        // assert!(s0 == s1 && s1 == s2);
+        // let mv = if state.current_player {
+        //     // blue_player
+        // let (_, mv) = negascout(self.0, state, i8::MIN + 1, i8::MAX, memo);
+        //     mv
+        // } else {
+        //     // red player
+        //     let (_, mv) = alpha_beta_sorted(self.0, state, i8::MIN + 1, i8::MAX);
+        //     mv
+        // };
+        // let start_time = Instant::now();
+        // let (_s1, mv1) = pneg_max(self.0, state);
+        // let end_time = Instant::now();
+        // let duration = end_time.duration_since(start_time);
+        // if duration.as_secs_f32() > 1.0 {
+        //     unreachable!("Duration was greater than 1 second");
+        // }
+        // unsafe {
+        //     gvec.push(duration.as_secs_f32());
+        //     println!(">{:?}", gvec);
+        // }
+        // mv1
+        let (s1, _, mv1) = pexpectimax(self.0, state, true);
+        mv1
     }
 }
 
