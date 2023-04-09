@@ -131,9 +131,9 @@ impl<'a> Configuration<'a> {
             );
             println!("{}", self);
             let play_attempt = if self.current_player {
-                player_two.compute_next_move(self)
+                player_two.compute_next_move(self, None)
             } else {
-                player_one.compute_next_move(self)
+                player_one.compute_next_move(self, None)
             };
             if let Some(ref next_move) = play_attempt {
                 assert!(self.check_move(next_move));

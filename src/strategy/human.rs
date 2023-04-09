@@ -5,6 +5,7 @@ use crate::positions::{BoardPosition, Position};
 use std::fmt;
 use std::io;
 use std::io::BufRead;
+use std::collections::HashMap;
 
 /// Let a human enter moves on stdin.
 pub struct Human();
@@ -50,7 +51,11 @@ fn ask_move() -> Result<Movement, io::Error> {
 }
 
 impl Strategy for Human {
-    fn compute_next_move(&mut self, configuration: &Configuration) -> Option<Movement> {
+    fn compute_next_move(
+        &mut self,
+        configuration: &Configuration,
+        _memo: Option<&mut HashMap<String, (i8, Movement)>>,
+    ) -> Option<Movement> {
         if configuration.movements().next().is_some() {
             loop {
                 if let Ok(movement) = ask_move() {

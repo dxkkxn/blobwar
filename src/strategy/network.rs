@@ -6,6 +6,7 @@ use serde_json::{de, Deserializer, StreamDeserializer};
 use std::fmt;
 use std::io::prelude::*;
 use std::net::TcpStream;
+use std::collections::HashMap;
 
 /// Let a remote client enter moves.
 pub struct NetworkPlayer {
@@ -35,7 +36,11 @@ impl NetworkPlayer {
 }
 
 impl Strategy for NetworkPlayer {
-    fn compute_next_move(&mut self, configuration: &Configuration) -> Option<Movement> {
+    fn compute_next_move(
+        &mut self,
+        configuration: &Configuration,
+        _memo: Option<&mut HashMap<String, (i8, Movement)>>,
+    ) -> Option<Movement> {
         let mut message = configuration.serialize();
         message.push('\n');
         self.connection

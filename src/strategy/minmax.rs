@@ -3,8 +3,10 @@ use super::Strategy;
 use crate::configuration::{Configuration, Movement};
 use crate::shmem::AtomicMove;
 use std::fmt;
-use std::time::Instant;
 use rayon::prelude::*;
+use std::collections::HashMap;
+// use std::time::{Duration, Instant};
+// use lazy_static::lazy_static;
 
 /// Min-Max algorithm with a given recursion depth.
 pub struct MinMax(pub u8);
@@ -199,6 +201,6 @@ impl fmt::Display for MinMax {
 pub fn min_max_anytime(state: &Configuration) {
     let mut movement = AtomicMove::connect().expect("failed connecting to shmem");
     for depth in 1..100 {
-        movement.store(MinMax(depth).compute_next_move(state));
+        movement.store(MinMax(depth).compute_next_move(state, None));
     }
 }

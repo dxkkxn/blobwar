@@ -21,7 +21,7 @@ fn main() {
     {
         let board = Board::deserialize(&line);
         let game = Configuration::deserialize(&line, &board);
-        let next_move = strategy.compute_next_move(&game);
+        let next_move = strategy.compute_next_move(&game, None);
         serde_json::to_writer(&mut sending, &next_move).expect("sending back movement failed");
         sending.write(b"\n").expect("newline failed");
     }

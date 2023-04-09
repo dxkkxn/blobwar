@@ -2,6 +2,7 @@
 use super::Strategy;
 use crate::{configuration::{Configuration, Movement}, positions::Position};
 use std::fmt;
+use std::collections::HashMap;
 
 /// Dumb algorithm.
 /// Amongst all possible movements return the one which yields the configuration with the best
@@ -15,7 +16,11 @@ impl fmt::Display for Greedy {
 }
 
 impl Strategy for Greedy {
-    fn compute_next_move(&mut self, state: &Configuration) -> Option<Movement> {
+    fn compute_next_move(
+        &mut self,
+        state: &Configuration,
+        _memo: Option<&mut HashMap<String, (i8, Movement)>>,
+    ) -> Option<Movement> {
         let mut best_score = i8::MIN;
         let mut best_move: Option<Movement> = None;
         for movement in state.movements() {

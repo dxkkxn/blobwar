@@ -5,6 +5,7 @@ use std::io;
 use std::process::Command;
 use std::thread::sleep;
 use std::time::Duration;
+use std::collections::HashMap;
 
 use super::Strategy;
 use crate::configuration::{Configuration, Movement};
@@ -36,7 +37,11 @@ impl fmt::Display for IterativeDeepening {
 }
 
 impl Strategy for IterativeDeepening {
-    fn compute_next_move(&mut self, state: &Configuration) -> Option<Movement> {
+    fn compute_next_move(
+        &mut self,
+        state: &Configuration,
+        _memo: Option<&mut HashMap<String, (i8, Movement)>>,
+    ) -> Option<Movement> {
         let movement = AtomicMove::new().expect("failed creating shmem");
         let configuration = state.serialize();
         let mut child = Command::new("blobwar_iterative_deepening")
